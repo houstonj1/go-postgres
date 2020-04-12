@@ -31,7 +31,13 @@ func Pq(logger *zap.SugaredLogger) {
 	logger.Info("connected to postgres")
 	create(db, logger)
 	insert(db, logger)
-	selectAll(db, logger)
+	items := selectAll(db, logger)
+	for _, item := range items {
+		selectByID(db, logger, item.ID)
+		if err != nil {
+			logger.Errorf("error selecting item %s: %s", fmt.Errorf("%w", err))
+		}
+	}
 }
 
 func create(db *sql.DB, logger *zap.SugaredLogger) {
@@ -105,4 +111,22 @@ func selectAll(db *sql.DB, logger *zap.SugaredLogger) []Item {
 		items = append(items, item)
 	}
 	return items
+}
+
+func selectByID(db *sql.DB, logger *zap.SugaredLogger, id string) Item {
+	query := fmt.Sprintf("SELECT id, name, description FROM item WHERE id = '%s'", id)
+	logger.Infof("selecting item by ID: %s", id)
+	rows, err := db.Query(query)
+	if err != nil {
+		logger.Fatalf("%s", fmt.Errorf("error selecting item with id %s: %w", id, err))
+	}
+	var item Item
+	for rows.Next() {
+		err := rows.Scan(&item.ID, &item.Name, &item.Description)
+		if err != nil {
+			logger.Fatalf("%s", fmt.Errorf("error scanning next row: %w", err))
+		}
+		logger.Infof("%v", item)
+	}
+	return item
 }
