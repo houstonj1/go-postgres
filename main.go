@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/houstonj1/go-postgres/config"
+	"github.com/houstonj1/go-postgres/pq"
 	"go.uber.org/zap"
 )
 
@@ -14,4 +15,9 @@ func main() {
 
 	config := config.NewConfig()
 	logger.Debugf("%s", config.Print())
+
+	logger.Info("-------------------------------------")
+	logger.Info("-------------  lib/pq  --------------")
+	logger.Info("-------------------------------------")
+	pq.Pq(logger)
 }
