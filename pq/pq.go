@@ -28,7 +28,7 @@ func create(db *sql.DB, logger *zap.SugaredLogger) {
 	_, err := db.Query(`
 		CREATE TABLE public.item (
 			id text NOT NULL PRIMARY KEY,
-			name text NOT NULL,
+			name text NOT NULL UNIQUE,
 			description text
 		);
 	`)
