@@ -12,10 +12,13 @@ import (
 // Pq postgres with lib/pq
 func Pq(logger *zap.SugaredLogger) {
 	config := config.NewConfig()
-	connStr := fmt.Sprintf("user=%s dbname=%s", config.DBUsername, config.DBUsername)
-	_, err := sql.Open("postgres", connStr)
+	connStr := fmt.Sprintf("user=%s dbname=%s sslmode=disable", config.DBUsername, config.DBUsername)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		logger.Fatalf("error creating db connection: %w", err)
+		logger.Fatalf("%s", fmt.Errorf("error opening db connection: %w", err))
+	}
+	if err = db.Ping(); err != nil {
+		logger.Fatalf("%s", fmt.Errorf("error connecting to postgres: %w", err))
 	}
 	logger.Debug("connected to postgres")
 }
