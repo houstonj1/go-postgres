@@ -46,7 +46,17 @@ func Pq(logger *zap.SugaredLogger) {
 		}
 	}
 	logger.Info("-------------------------------------")
+	logger.Info("-------------- UPSERT ---------------")
+	items = append(items, Item{
+		ID:          uuid.New().String(),
+		Name:        "wireless mouse",
+		Description: "A wireless computer mouse",
+	})
+	items[2].Description = "A wired computer mouse"
+	upsert(db, logger, items)
+	logger.Info("-------------------------------------")
 	logger.Info("----------- DELETE BY ID ------------")
+	items = selectAll(db, logger)
 	for _, item := range items {
 		deleteByID(db, logger, item.ID)
 		if err != nil {
@@ -154,4 +164,30 @@ func selectByID(db *sql.DB, logger *zap.SugaredLogger, id string) Item {
 		logger.Infof("%v", item)
 	}
 	return item
+}
+
+func upsert(db *sql.DB, logger *zap.SugaredLogger, items []Item) {
+	length := len(items) - 1
+	values := ""
+	for index, item := range items {
+		var value string
+		if index != length {
+			value = fmt.Sprintf("('%s', '%s', '%s'),", item.ID, item.Name, item.Description)
+		} else {
+			value = fmt.Sprintf("('%s', '%s', '%s')", item.ID, item.Name, item.Description)
+		}
+		logger.Infof("upserting on id %s: %s", item.ID, value)
+		values += value
+	}
+	query := fmt.Sprintf(`
+		INSERT INTO item(id, name, description)
+		VALUES %s
+		ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
+		description = EXCLUDED.description`,
+		values,
+	)
+	_, err := db.Query(query)
+	if err != nil {
+		logger.Fatalf("%s", fmt.Errorf("error upserting values: %w", err))
+	}
 }
