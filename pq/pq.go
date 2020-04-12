@@ -29,15 +29,23 @@ func Pq(logger *zap.SugaredLogger) {
 		logger.Fatalf("%s", fmt.Errorf("error connecting to postgres: %w", err))
 	}
 	logger.Info("connected to postgres")
+	logger.Info("------------ CREATE TABLE -----------")
 	create(db, logger)
+	logger.Info("-------------------------------------")
+	logger.Info("-------------- INSERT ---------------")
 	insert(db, logger)
+	logger.Info("-------------------------------------")
+	logger.Info("------------ SELECT ALL -------------")
 	items := selectAll(db, logger)
+	logger.Info("-------------------------------------")
+	logger.Info("----------- SELECT BY ID ------------")
 	for _, item := range items {
 		selectByID(db, logger, item.ID)
 		if err != nil {
 			logger.Errorf("error selecting item %s: %s", fmt.Errorf("%w", err))
 		}
 	}
+	logger.Info("-------------------------------------")
 }
 
 func create(db *sql.DB, logger *zap.SugaredLogger) {
