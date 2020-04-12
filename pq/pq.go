@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/houstonj1/go-postgres/config"
-	_ "github.com/lib/pq" // postgres driver
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
@@ -20,5 +20,24 @@ func Pq(logger *zap.SugaredLogger) {
 	if err = db.Ping(); err != nil {
 		logger.Fatalf("%s", fmt.Errorf("error connecting to postgres: %w", err))
 	}
-	logger.Debug("connected to postgres")
+	logger.Info("connected to postgres")
+	create(db, logger)
+}
+
+func create(db *sql.DB, logger *zap.SugaredLogger) {
+	_, err := db.Query(`
+		CREATE TABLE public.item (
+			id text NOT NULL,
+			name text NOT NULL,
+			description text
+		);
+	`)
+	if err != nil {
+		if err.(*pq.Error).Code.Name() == "duplicate_table" {
+			logger.Info("item table already exists")
+			return
+		}
+		logger.Fatalf("%s", fmt.Errorf("error creating item table: %w", err))
+	}
+	logger.Info("item table created")
 }
