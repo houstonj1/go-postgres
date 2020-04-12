@@ -31,6 +31,7 @@ func Pq(logger *zap.SugaredLogger) {
 	logger.Info("connected to postgres")
 	create(db, logger)
 	insert(db, logger)
+	selectAll(db, logger)
 }
 
 func create(db *sql.DB, logger *zap.SugaredLogger) {
@@ -83,4 +84,25 @@ func insert(db *sql.DB, logger *zap.SugaredLogger) {
 			logger.Info("created item")
 		}
 	}
+}
+
+func selectAll(db *sql.DB, logger *zap.SugaredLogger) []Item {
+	query := fmt.Sprintf("SELECT id, name, description FROM item")
+	logger.Info("selecting all items")
+	rows, err := db.Query(query)
+	if err != nil {
+		logger.Fatalf("%s", fmt.Errorf("error selecting all items: %w", err))
+	}
+	defer rows.Close()
+	var items []Item
+	var item Item
+	for rows.Next() {
+		err := rows.Scan(&item.ID, &item.Name, &item.Description)
+		if err != nil {
+			logger.Fatalf("%s", fmt.Errorf("error scanning next row: %w", err))
+		}
+		logger.Infof("%v", item)
+		items = append(items, item)
+	}
+	return items
 }
