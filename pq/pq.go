@@ -42,7 +42,15 @@ func Pq(logger *zap.SugaredLogger) {
 	for _, item := range items {
 		selectByID(db, logger, item.ID)
 		if err != nil {
-			logger.Errorf("error selecting item %s: %s", fmt.Errorf("%w", err))
+			logger.Errorf("error selecting item %s: %s", item.ID, fmt.Errorf("%w", err))
+		}
+	}
+	logger.Info("-------------------------------------")
+	logger.Info("----------- DELETE BY ID ------------")
+	for _, item := range items {
+		deleteByID(db, logger, item.ID)
+		if err != nil {
+			logger.Errorf("error deleting item %s: %s", item.ID, fmt.Errorf("%w", err))
 		}
 	}
 	logger.Info("-------------------------------------")
@@ -64,6 +72,15 @@ func create(db *sql.DB, logger *zap.SugaredLogger) {
 		logger.Fatalf("%s", fmt.Errorf("error creating item table: %w", err))
 	}
 	logger.Info("item table created")
+}
+
+func deleteByID(db *sql.DB, logger *zap.SugaredLogger, id string) {
+	query := fmt.Sprintf("DELETE FROM item WHERE id = '%s'", id)
+	logger.Infof("deleting item by ID: %s", id)
+	_, err := db.Query(query)
+	if err != nil {
+		logger.Fatalf("%s", fmt.Errorf("error deleting item with id %s: %w", id, err))
+	}
 }
 
 func insert(db *sql.DB, logger *zap.SugaredLogger) {
